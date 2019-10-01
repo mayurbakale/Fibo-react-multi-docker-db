@@ -1,0 +1,23 @@
+sudo: required
+
+services:
+  - docker
+
+before_install:
+  - docker build -t mayurbakale/multidockerreactfibo -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true mayurbakale/multidockerreactfibo npm test
+
+after_success:
+  - docker build -t mayurbakale/fibo-multi-client ./client
+  - docker build -t mayurbakale/fibo-multi-worker ./worker
+  - docker build -t mayurbakale/fibo-multi-server ./server
+  - docker build -t mayurbakale/fibo-multi-nginx ./nginx
+  # Login to Docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push to docker hub
+  - docker push mayurbakale/fibo-multi-client
+  - docker push mayurbakale/fibo-multi-worker
+  - docker push mayurbakale/fibo-multi-server
+  - docker push mayurbakale/fibo-multi-nginx
